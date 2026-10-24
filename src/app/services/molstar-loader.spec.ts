@@ -4,15 +4,19 @@ import { Theme } from './theme';
 
 describe('MolstarLoader', () => {
   let loader: MolstarLoader;
+  let defined: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     localStorage.clear();
+    defined = vi.spyOn(customElements, 'get').mockReturnValue(undefined);
     document
       .querySelectorAll(`script[src="${MOLSTAR_SCRIPT}"], #pdbe-molstar-style`)
       .forEach((e) => e.remove());
     TestBed.configureTestingModule({});
     loader = TestBed.inject(MolstarLoader);
   });
+
+  afterEach(() => defined.mockRestore());
 
   function script(): HTMLScriptElement | null {
     return document.querySelector(`script[src="${MOLSTAR_SCRIPT}"]`);
@@ -37,6 +41,13 @@ describe('MolstarLoader', () => {
     await expect(first).resolves.toBeUndefined();
     expect(second).toBe(first);
     expect(document.querySelectorAll(`script[src="${MOLSTAR_SCRIPT}"]`).length).toBe(1);
+  });
+
+  it('resolves without adding the script when the element is already defined', async () => {
+    defined.mockReturnValue(class extends HTMLElement {});
+
+    await expect(loader.load()).resolves.toBeUndefined();
+    expect(script()).toBeNull();
   });
 
   it('rejects when the script fails to load', async () => {
