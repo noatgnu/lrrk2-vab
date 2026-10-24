@@ -31,13 +31,14 @@ export interface Measurement {
 }
 
 /**
- * A variant listed in the explorer, with the residues it marks on the structure and its activity
- * in the screen and in the replicates, where measured.
+ * A variant listed in the explorer, with the residues it marks on the structure, the domains those
+ * residues fall in, and its activity in the screen and in the replicates, where measured.
+ * A multi-residue variant without a domain of its own belongs to every domain its residues fall in.
  */
 export interface StructureVariant {
   name: string;
   residues: number[];
-  domain: string | null;
+  domains: string[];
   classification: string | null;
   group: ActivityGroup | null;
   screen: Measurement | null;
@@ -82,6 +83,7 @@ export class StructureExplorer {
 
   protected readonly model = STRUCTURE_MODEL;
   protected readonly groupLabels = GROUP_LABELS;
+  protected readonly domainLabel = domainLabel;
   protected readonly groups: ActivityGroup[] = ['above_reference', 'wt_range', 'reduced'];
   protected readonly filter = signal('');
   protected readonly opacity = signal(0.45);
@@ -123,6 +125,10 @@ export class StructureExplorer {
       const v = screenByName.get(name);
       return v && v.mean !== null ? { mean: v.mean, sd: v.sd, n: v.n ?? 0 } : null;
     };
+    const domainsOf = (domain: string | null, residues: number[]): string[] =>
+      domain
+        ? [domain]
+        : [...new Set(residues.map((r) => this.domainOf(r)).filter((d): d is string => !!d))];
     const replicatesOf = (name: string): Measurement | null => {
       const v = replicatesByName.get(name);
       return v && v.mean !== null ? { mean: v.mean, sd: v.sd, n: v.replicates.length } : null;
@@ -131,7 +137,7 @@ export class StructureExplorer {
       return rankVariants(this.screens.apply(screenVariants)).map((r) => ({
         name: r.variant.variant,
         residues: r.variant.residues,
-        domain: r.variant.domain,
+        domains: domainsOf(r.variant.domain, r.variant.residues),
         classification: r.variant.classification,
         group: r.group,
         screen: screenOf(r.variant.variant),
@@ -141,7 +147,7 @@ export class StructureExplorer {
     return replicateVariants.map((v) => ({
       name: v.variant,
       residues: v.residues,
-      domain: v.domain,
+      domains: domainsOf(v.domain, v.residues),
       classification: v.classification,
       group: null,
       screen: screenOf(v.variant),
@@ -154,10 +160,10 @@ export class StructureExplorer {
     const hidden = this.hidden();
     const rows = this.variants().filter(
       (v) =>
-        (!v.domain || !hidden.has(v.domain)) &&
+        (!v.domains.length || v.domains.some((d) => !hidden.has(d))) &&
         (!query ||
           v.name.toLowerCase().includes(query) ||
-          (v.domain ?? '').toLowerCase().includes(query)),
+          domainLabel(v).toLowerCase().includes(query)),
     );
     const sort = this.sort();
     return sort ? sortVariants(rows, sort) : rows;
@@ -166,25 +172,40 @@ export class StructureExplorer {
   protected readonly counts = computed(() => {
     const counts = new Map<string, number>();
     for (const v of this.variants()) {
-      if (v.domain) {
-        counts.set(v.domain, (counts.get(v.domain) ?? 0) + 1);
-      }
+      const label = domainLabel(v);
+      counts.set(label, (counts.get(label) ?? 0) + 1);
     }
     return counts;
+  });
+
+  protected readonly combinations = computed(() => {
+    const order = new Map(this.domains().map((d, i) => [d.name, i]));
+    const seen = new Map<string, string[]>();
+    for (const v of this.variants()) {
+      if (v.domains.length > 1) {
+        seen.set(domainLabel(v), v.domains);
+      }
+    }
+    return [...seen.entries()]
+      .map(([label, domains]) => ({ label, domains, count: this.counts().get(label) ?? 0 }))
+      .sort((a, b) => (order.get(a.domains[0]) ?? 0) - (order.get(b.domains[0]) ?? 0));
   });
 
   protected readonly marked = computed<MarkedResidue[]>(() => {
     const palette = this.palette();
     const hidden = this.hidden();
     const focused = this.focusDomain()?.name;
-    return this.variants()
-      .filter((v) => (focused ? v.domain === focused : !v.domain || !hidden.has(v.domain)))
-      .flatMap((v) =>
-        v.residues.map((residue) => ({
+    return this.variants().flatMap((v) =>
+      v.residues
+        .filter((residue) => {
+          const domain = v.domains.length === 1 ? v.domains[0] : this.domainOf(residue);
+          return focused ? domain === focused : !domain || !hidden.has(domain);
+        })
+        .map((residue) => ({
           residue,
           color: v.group ? palette.group[v.group] : palette.ink,
         })),
-      );
+    );
   });
 
   protected readonly selected = computed(() =>
@@ -295,7 +316,7 @@ export function sortVariants(rows: StructureVariant[], sort: TableSort): Structu
       case 'name':
         return v.name;
       case 'domain':
-        return v.domain;
+        return domainLabel(v) || null;
       case 'screen':
         return v.screen?.mean ?? null;
       case 'replicates':
@@ -315,4 +336,11 @@ export function sortVariants(rows: StructureVariant[], sort: TableSort): Structu
         : String(x).localeCompare(String(y), undefined, { numeric: true });
     return order * direction;
   });
+}
+
+/**
+ * The variant's domains joined for display, e.g. `ARM + ROC`, or an empty string when it has none.
+ */
+export function domainLabel(variant: StructureVariant): string {
+  return variant.domains.join(' + ');
 }

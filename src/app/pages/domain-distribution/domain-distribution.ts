@@ -46,7 +46,7 @@ export class DomainDistribution {
       x: members.map(() => domain.name),
       y: members.map((v) => v.mean as number),
       text: members.map((v) => v.variant),
-      spanmode: 'hard',
+      spanmode: 'soft',
       points: 'all',
       pointpos: 0,
       jitter: 0.6,
@@ -92,7 +92,6 @@ export class DomainDistribution {
     const screen = this.data.screen.value();
     const variants = this.screens.apply(screen.variants);
     const data: Data[] = screen.domains.map((domain) => this.violin(domain, variants, palette));
-    const maxMean = Math.max(...variants.map((v) => v.mean ?? 0));
     const layout: Partial<Layout> = {
       height: 520,
       margin: { l: 56, r: 16, t: 16, b: 40 },
@@ -103,7 +102,7 @@ export class DomainDistribution {
       xaxis: { showgrid: false, zeroline: false, showline: true, linecolor: palette.axis },
       yaxis: {
         title: { text: 'pThr73-Rab10 (fold-change vs WT)' },
-        range: [-0.3, Math.ceil(maxMean + 1)],
+        autorange: true,
         tickvals: [0, 1, 2, 4, 6, 8],
         tickfont: { color: palette.muted },
         showgrid: false,

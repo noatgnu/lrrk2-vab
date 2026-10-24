@@ -11,6 +11,7 @@ import { DomainDistribution } from './domain-distribution';
 
 interface Violin {
   type: string;
+  spanmode: string;
   name: string;
   y: number[];
   text: string[];
@@ -53,6 +54,7 @@ describe('DomainDistribution', () => {
 
     expect(violins.map((v) => v.name)).toEqual(['ARM', 'ROC']);
     expect(violins.every((v) => v.type === 'violin')).toBe(true);
+    expect(violins.every((v) => v.spanmode === 'soft')).toBe(true);
     expect(violins[0].text).toEqual(['A312V', 'H115P']);
     expect(violins.flatMap((v) => v.text)).not.toContain('R1514G');
   });

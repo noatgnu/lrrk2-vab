@@ -3,10 +3,15 @@
     <h2>Activating variants across LRRK2 domains</h2>
     <p class="caption">
       Variants with replicate pRAB10/RAB10 measurements, grouped by domain.
-      <b><i>Bold italic</i>*</b> = MDSG pathogenic or likely pathogenic. Hover the ticks for
-      activity; click a box to focus that domain in the structure and replicate plot below.
+      <b><i>Bold italic</i>*</b> = MDSG pathogenic or likely pathogenic. Click a box
+      to focus that domain in the structure and replicate plot below.
     </p>
   </header>
+
+  <label class="dots-toggle">
+    <input type="checkbox" [checked]="showDots()" (change)="showDots.set(!showDots())" />
+    Variant dots
+  </label>
 
   @if (failed()) {
     <p class="status">Could not load variant data.</p>

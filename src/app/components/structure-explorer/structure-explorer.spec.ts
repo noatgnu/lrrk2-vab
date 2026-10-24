@@ -114,11 +114,56 @@ describe('StructureExplorer', () => {
     });
   });
 
-  it('shows only the focused domain’s variants on the structure', async () => {
+  it('shows only the focused domain’s residues, including a double mutant’s residue there', async () => {
     const viewer = await load({ domain: 'ROC' });
 
     expect(viewer.focusDomain()?.name).toBe('ROC');
-    expect(viewer.marked().map((m) => m.residue)).toEqual([1441]);
+    expect(viewer.marked().map((m) => m.residue)).toEqual([1441, 1441]);
+  });
+
+  it('counts a double mutant under its domain combination so the panel adds up to the list', async () => {
+    await load();
+    const rows = Array.from(
+      fixture.nativeElement.querySelectorAll('.domains li') as NodeListOf<HTMLElement>,
+    ).map((li) => [
+      li.querySelector('.link')?.textContent?.trim(),
+      li.querySelector('.count')?.textContent?.trim(),
+    ]);
+    const total = rows.reduce((sum, [, count]) => sum + Number(count), 0);
+
+    expect(cells('S455P-R1441H')[1]).toBe('ARM + ROC');
+    expect(rows).toEqual([
+      ['ARM', '1'],
+      ['ROC', '1'],
+      ['ARM + ROC', '1'],
+    ]);
+    expect(total).toBe(listed().length);
+  });
+
+  it('filters the variant list to a domain combination when its name is clicked', async () => {
+    await load();
+    const combination: HTMLButtonElement = fixture.nativeElement.querySelector(
+      '.domains li.combination .link',
+    );
+
+    combination.click();
+    fixture.detectChanges();
+
+    expect(listed()).toEqual(['S455P-R1441H']);
+  });
+
+  it('keeps a double mutant listed until both of its domains are hidden', async () => {
+    const viewer = await load();
+    const checkboxes = fixture.nativeElement.querySelectorAll('.domains input');
+
+    checkboxes[1].click();
+    fixture.detectChanges();
+    expect(listed()).toEqual(['H230R', 'S455P-R1441H']);
+    expect(viewer.marked().map((m) => m.residue)).toEqual([230, 455]);
+
+    checkboxes[0].click();
+    fixture.detectChanges();
+    expect(listed()).toEqual([]);
   });
 
   it('hides a domain’s surface and variants when unchecked', async () => {

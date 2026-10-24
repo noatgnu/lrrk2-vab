@@ -5,3 +5,16 @@
 .plot-frame {
   min-width: 960px;
 }
+
+.dots-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--mat-sys-on-surface-variant);
+  cursor: pointer;
+
+  input {
+    margin: 0;
+  }
+}

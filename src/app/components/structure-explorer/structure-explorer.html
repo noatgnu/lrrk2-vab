@@ -80,6 +80,31 @@
               <span class="count">{{ counts().get(d.name) ?? 0 }}</span>
             </li>
           }
+          @for (c of combinations(); track c.label) {
+            <li class="combination">
+              <span></span>
+              <span
+                class="swatch"
+                [style.background]="
+                  'linear-gradient(90deg, ' +
+                  palette().domain[c.domains[0]] +
+                  ' 50%, ' +
+                  palette().domain[c.domains[1]] +
+                  ' 50%)'
+                "
+              ></span>
+              <button
+                type="button"
+                class="link"
+                [title]="'Show ' + c.label + ' in the variant list'"
+                (click)="filter.set(c.label)"
+              >
+                {{ c.label }}
+              </button>
+              <span class="range"></span>
+              <span class="count">{{ c.count }}</span>
+            </li>
+          }
         </ul>
 
         <h3>
@@ -138,7 +163,7 @@
                       >{{ v.name }}
                     </button>
                   </td>
-                  <td class="domain">{{ v.domain ?? '—' }}</td>
+                  <td class="domain">{{ domainLabel(v) || '—' }}</td>
                   <td class="screen">
                     @if (v.screen; as m) {
                       {{ m.mean.toFixed(2) }} <span class="n">({{ m.n }})</span>
@@ -165,8 +190,8 @@
             <dd>{{ v.name }}</dd>
             <dt>Residue{{ v.residues.length > 1 ? 's' : '' }}</dt>
             <dd>{{ v.residues.join(', ') }}</dd>
-            <dt>Domain</dt>
-            <dd>{{ v.domain ?? 'multiple' }}</dd>
+            <dt>Domain{{ v.domains.length > 1 ? 's' : '' }}</dt>
+            <dd>{{ domainLabel(v) || '—' }}</dd>
             <dt>Screen</dt>
             <dd>
               @if (v.screen; as m) {

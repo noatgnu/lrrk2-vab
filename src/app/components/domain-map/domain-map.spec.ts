@@ -9,7 +9,7 @@ import { flushIndex, REPLICATES_URL, SCREEN_URL } from '../../testing/data-reque
 import { PlotlyStub } from '../../testing/plotly-stub';
 import { LIGHT_PALETTE } from '../../models/chart-theme';
 import { Theme } from '../../services/theme';
-import { DomainMap } from './domain-map';
+import { DomainMap, stackLevels } from './domain-map';
 
 describe('DomainMap', () => {
   let component: DomainMap;
@@ -99,5 +99,26 @@ describe('DomainMap', () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).toContain('Could not load variant data.');
+  });
+
+  it('draws one dot per variant and hides them with the Variant dots checkbox', async () => {
+    const plot = await load();
+    const traces = () => plot.data() as { x: number[]; y: number[] }[];
+
+    expect(traces().length).toBe(2);
+    expect(traces()[1].x).toEqual([230, 1441]);
+
+    fixture.nativeElement.querySelector('.dots-toggle input').click();
+    fixture.detectChanges();
+
+    expect(traces().length).toBe(1);
+  });
+});
+
+describe('stackLevels', () => {
+  it('stacks positions closer than the gap and reuses the lowest free level', () => {
+    expect(stackLevels([1441, 1441, 1441, 1441], 16)).toEqual([0, 1, 2, 3]);
+    expect(stackLevels([100, 110, 120, 140], 16)).toEqual([0, 1, 0, 0]);
+    expect(stackLevels([2019, 2020, 2020, 2100], 16)).toEqual([0, 1, 2, 0]);
   });
 });

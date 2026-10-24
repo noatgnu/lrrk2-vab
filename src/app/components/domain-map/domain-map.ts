@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, output } from '@angular/core';
+import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { PlotlyComponent } from 'angular-plotly.js';
 import type { ClickAnnotationEvent, Data, Layout } from 'plotly.js-dist-min';
 import { baseLayout, ChartPalette, Figure } from '../../models/chart-theme';
@@ -32,6 +32,9 @@ const CALLOUTS: Record<string, CalloutPlacement> = {
 };
 
 const BAR_HALF_HEIGHT = 0.05;
+const DOT_BASE = BAR_HALF_HEIGHT + 0.035;
+const DOT_STEP = 0.03;
+const DOT_GAP_RESIDUES = 16;
 const LIGHT_DOMAINS = new Set(['LRR', 'COR-A', 'COR-B', 'KIN']);
 const MONO = 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
 const ON_LIGHT_FILL = '#0b0b0b';
@@ -53,6 +56,7 @@ export class DomainMap {
   private readonly chartExport = inject(ChartExport);
 
   readonly selected = input<string | undefined>();
+  protected readonly showDots = signal(false);
   readonly domainSelected = output<string>();
 
   protected readonly loading = computed(
@@ -106,24 +110,34 @@ export class DomainMap {
   }
 
   private variantTrace(variants: ReplicateVariant[], palette: ChartPalette): Data {
+    const sorted = [...variants].sort((a, b) => (a.residue ?? 0) - (b.residue ?? 0));
+    const levels = stackLevels(
+      sorted.map((v) => v.residue ?? 0),
+      DOT_GAP_RESIDUES,
+    );
     return {
       type: 'scatter',
       mode: 'markers',
-      x: variants.map((v) => v.residue),
-      y: variants.map(() => BAR_HALF_HEIGHT + 0.025),
-      marker: { symbol: 'line-ns-open', size: 9, color: palette.ink, line: { width: 1.5 } },
-      customdata: variants.map((v) => [
+      x: sorted.map((v) => v.residue),
+      y: levels.map((level) => DOT_BASE + level * DOT_STEP),
+      marker: {
+        size: 7,
+        color: sorted.map((v) => (v.domain ? palette.domain[v.domain] : palette.control)),
+        line: { color: palette.markerOutline, width: 0.75 },
+      },
+      customdata: sorted.map((v) => [
         v.variant,
         v.domain,
         v.mean?.toFixed(2) ?? '–',
         v.sd?.toFixed(2) ?? '–',
-        v.classification ?? 'not classified',
+        v.replicates.length,
+        v.classification ?? 'N/A',
         v.outcome?.label ?? '',
       ]),
       hovertemplate:
         '<b>%{customdata[0]}</b> · %{customdata[1]}<br>' +
-        'pRAB10/RAB10 %{customdata[2]} ± %{customdata[3]}<br>' +
-        'MDSG: %{customdata[4]}<br>%{customdata[5]}<extra></extra>',
+        'replicate mean %{customdata[2]} ± %{customdata[3]} (n=%{customdata[4]})<br>' +
+        'MDSG: %{customdata[5]}<br>%{customdata[6]}<extra></extra>',
     };
   }
 
@@ -238,7 +252,7 @@ export class DomainMap {
     const doubles = replicates.variants.filter((v) => v.domain === null);
     const data: Data[] = [
       this.domainTrace(screen.domains, palette),
-      this.variantTrace(singles, palette),
+      ...(this.showDots() ? [this.variantTrace(singles, palette)] : []),
     ];
     const layout: Partial<Layout> = {
       height: 520,
@@ -265,4 +279,20 @@ export class DomainMap {
  */
 export function isPathogenic(variant: ReplicateVariant): boolean {
   return !!variant.classification && PATHOGENIC_CLASSES.has(variant.classification);
+}
+
+/**
+ * Assigns each position (in ascending order) the lowest stack level whose previous position is at
+ * least `gap` away, so that marks closer than `gap` stack upward instead of overlapping.
+ */
+export function stackLevels(positions: number[], gap: number): number[] {
+  const lastAtLevel: number[] = [];
+  return positions.map((position) => {
+    let level = lastAtLevel.findIndex((last) => position - last >= gap);
+    if (level === -1) {
+      level = lastAtLevel.length;
+    }
+    lastAtLevel[level] = position;
+    return level;
+  });
 }
