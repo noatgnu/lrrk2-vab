@@ -1,0 +1,10 @@
+<app-domain-map [selected]="domain()" (domainSelected)="selectDomain($event)" />
+<app-structure-explorer #structure [domain]="domain()" [set]="set()" [variant]="variant()" />
+<app-replicate-activity [domain]="domain()" />
+@if (focused(); as domain) {
+  <app-domain-focus-chip
+    [domain]="domain"
+    [variantCount]="focusedCount()"
+    (cleared)="clearDomain()"
+  />
+}

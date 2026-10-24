@@ -1,0 +1,27 @@
+<section class="page">
+  <header class="page-header">
+    <h2>Variant activity by domain</h2>
+    <p class="caption">
+      Each dot is one screened variant; violins show the distribution per domain with median and
+      quartiles. Dotted lines mark 1.5, 1 and 0.5-fold × WT. Hover a dot for the variant name.
+    </p>
+  </header>
+
+  <div class="toolbar"><app-screen-filter /></div>
+
+  @if (failed()) {
+    <p class="status">Could not load variant data.</p>
+  } @else if (loading()) {
+    <p class="status">Loading…</p>
+  } @else if (figure(); as fig) {
+    <div class="plot-frame">
+      <plotly-plot
+        [data]="fig.data"
+        [layout]="fig.layout"
+        [config]="config"
+        [useResizeHandler]="true"
+        [innerStyle]="{ position: 'relative', width: '100%', height: fig.layout.height + 'px' }"
+      />
+    </div>
+  }
+</section>

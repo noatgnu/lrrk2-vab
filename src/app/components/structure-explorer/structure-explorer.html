@@ -1,0 +1,199 @@
+<section class="page">
+  <header class="page-header">
+    <h2>Variants on the LRRK2 structure</h2>
+    <p class="caption">
+      Domains are drawn as translucent surfaces; variant residues as spheres. Click a variant or a
+      sphere to zoom to it, click a domain name to focus it, and use the checkboxes to hide domains.
+      Drag to rotate, scroll to zoom.
+    </p>
+  </header>
+
+  <div class="toolbar">
+    <mat-button-toggle-group
+      hideSingleSelectionIndicator
+      [value]="variantSet()"
+      (change)="chooseSet($event.value)"
+      aria-label="Variant set"
+    >
+      <mat-button-toggle value="activating">Activating (replicates)</mat-button-toggle>
+      <mat-button-toggle value="all">All screened</mat-button-toggle>
+    </mat-button-toggle-group>
+
+    <label class="opacity">
+      Surface opacity
+      <input
+        type="range"
+        min="0.1"
+        max="1"
+        step="0.05"
+        [value]="opacity()"
+        (input)="opacity.set(+$any($event.target).value)"
+      />
+    </label>
+
+    <button type="button" class="reset" (click)="resetView()">Reset view</button>
+
+    @if (variantSet() === 'all') {
+      <app-screen-filter />
+      <span class="legend">
+        @for (group of groups; track group) {
+          <span class="key"
+            ><span class="dot" [style.background]="palette().group[group]"></span
+            >{{ groupLabels[group] }}</span
+          >
+        }
+      </span>
+    }
+  </div>
+
+  @if (failed()) {
+    <p class="status">Could not load variant data.</p>
+  } @else if (loading()) {
+    <p class="status">Loading…</p>
+  } @else {
+    <div class="layout">
+      <app-structure-viewer
+        class="viewer"
+        [domains]="domains()"
+        [marked]="marked()"
+        [hiddenDomains]="hidden()"
+        [opacity]="opacity()"
+        [focusResidues]="focusResidues()"
+        [focusDomain]="focusDomain()"
+        (residueClicked)="onResidueClicked($event)"
+      />
+
+      <aside class="panel">
+        <h3>Domains</h3>
+        <ul class="domains">
+          @for (d of domains(); track d.name) {
+            <li [class.focused]="domain() === d.name">
+              <input
+                type="checkbox"
+                [checked]="!hidden().has(d.name)"
+                (change)="toggleDomain(d.name)"
+                [attr.aria-label]="'Show ' + d.name"
+              />
+              <span class="swatch" [style.background]="palette().domain[d.name]"></span>
+              <button type="button" class="link" (click)="focusOn(d.name)">{{ d.name }}</button>
+              <span class="range">{{ d.start }}–{{ d.end }}</span>
+              <span class="count">{{ counts().get(d.name) ?? 0 }}</span>
+            </li>
+          }
+        </ul>
+
+        <h3>
+          Variants <span class="muted">({{ visibleVariants().length }})</span>
+        </h3>
+        <input
+          class="filter"
+          type="search"
+          placeholder="Filter by name or domain"
+          [value]="filter()"
+          (input)="filter.set($any($event.target).value)"
+        />
+        @if (clickedResidue(); as residue) {
+          <p class="clicked">
+            Residue {{ residue }}{{ domainOf(residue) ? ' · ' + domainOf(residue) : '' }}
+            @if (!selected()?.residues?.includes(residue)) {
+              <span class="muted">— no variant in this set</span>
+            }
+          </p>
+        }
+        <div class="table-wrap">
+          <table class="variants">
+            <thead>
+              <tr>
+                @for (column of columns; track column.key) {
+                  <th scope="col" [class]="column.key" [attr.aria-sort]="ariaSort(column.key)">
+                    <button type="button" [title]="column.title" (click)="sortBy(column.key)">
+                      {{ column.label }}
+                      <span class="sort" aria-hidden="true">{{
+                        ariaSort(column.key) === 'descending'
+                          ? '▼'
+                          : ariaSort(column.key) === 'ascending'
+                            ? '▲'
+                            : ''
+                      }}</span>
+                    </button>
+                  </th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (v of visibleVariants(); track v.name) {
+                <tr
+                  #row
+                  [attr.data-variant]="v.name"
+                  [class.selected]="v.name === variant()"
+                  [attr.aria-selected]="v.name === variant()"
+                  (click)="selectVariant(v.name)"
+                >
+                  <td class="name">
+                    <button type="button" (click)="$event.stopPropagation(); selectVariant(v.name)">
+                      <span
+                        class="dot"
+                        [style.background]="v.group ? palette().group[v.group] : palette().ink"
+                      ></span
+                      >{{ v.name }}
+                    </button>
+                  </td>
+                  <td class="domain">{{ v.domain ?? '—' }}</td>
+                  <td class="screen">
+                    @if (v.screen; as m) {
+                      {{ m.mean.toFixed(2) }} <span class="n">({{ m.n }})</span>
+                    } @else {
+                      <span class="n">–</span>
+                    }
+                  </td>
+                  <td class="replicates">
+                    @if (v.replicates; as m) {
+                      {{ m.mean.toFixed(2) }} <span class="n">({{ m.n }})</span>
+                    } @else {
+                      <span class="n">–</span>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <p class="table-note">Mean fold-change × WT (n).</p>
+        @if (selected(); as v) {
+          <dl class="detail">
+            <dt>Variant</dt>
+            <dd>{{ v.name }}</dd>
+            <dt>Residue{{ v.residues.length > 1 ? 's' : '' }}</dt>
+            <dd>{{ v.residues.join(', ') }}</dd>
+            <dt>Domain</dt>
+            <dd>{{ v.domain ?? 'multiple' }}</dd>
+            <dt>Screen</dt>
+            <dd>
+              @if (v.screen; as m) {
+                {{ m.mean.toFixed(2) }} ± {{ m.sd?.toFixed(2) ?? '–' }} (n = {{ m.n }})
+              } @else {
+                –
+              }
+            </dd>
+            <dt>Replicates</dt>
+            <dd>
+              @if (v.replicates; as m) {
+                {{ m.mean.toFixed(2) }} ± {{ m.sd?.toFixed(2) ?? '–' }} (n = {{ m.n }})
+              } @else {
+                –
+              }
+            </dd>
+            <dt>MDSG</dt>
+            <dd>{{ v.classification ?? 'not classified' }}</dd>
+          </dl>
+        }
+      </aside>
+    </div>
+  }
+
+  <p class="caption attribution">
+    Structure:
+    <a [href]="model.source" target="_blank" rel="noopener">AlphaFold model of LRRK2</a>
+    ({{ model.license }}).
+  </p>
+</section>

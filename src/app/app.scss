@@ -1,0 +1,53 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 0 16px;
+  height: 44px;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+  background: var(--mat-sys-surface-container-low);
+}
+
+h1 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.views {
+  display: flex;
+  gap: 4px;
+}
+
+.views a {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 13px;
+  color: var(--mat-sys-on-surface-variant);
+  text-decoration: none;
+}
+
+.views a:hover {
+  background: var(--mat-sys-surface-container-high);
+}
+
+.views a.active {
+  color: var(--mat-sys-on-secondary-container);
+  background: var(--mat-sys-secondary-container);
+}
+
+.content {
+  flex: 1;
+  padding: 8px 16px 16px;
+  overflow-x: auto;
+}
+
+.version {
+  margin-left: auto;
+}

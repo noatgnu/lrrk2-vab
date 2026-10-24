@@ -1,0 +1,17 @@
+<span class="label">Screens</span>
+<mat-button-toggle-group
+  multiple
+  hideMultipleSelectionIndicator
+  [value]="filter.selected()"
+  (change)="filter.select($event.value)"
+  aria-label="Screens"
+>
+  @for (screen of filter.available(); track screen) {
+    <mat-button-toggle
+      [value]="screen"
+      [disabled]="filter.selected().length === 1 && filter.selected()[0] === screen"
+    >
+      {{ screen }}
+    </mat-button-toggle>
+  }
+</mat-button-toggle-group>

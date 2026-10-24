@@ -1,0 +1,16 @@
+:host {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  --mat-button-toggle-height: 28px;
+  --mat-button-toggle-label-text-size: 12px;
+}
+
+.label {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+mat-button-toggle {
+  min-width: 32px;
+}

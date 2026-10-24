@@ -1,0 +1,8 @@
+<button
+  type="button"
+  [title]="label() + ' (click to change)'"
+  [attr.aria-label]="label()"
+  (click)="theme.cycle()"
+>
+  <span class="material-symbols-outlined" aria-hidden="true">{{ icon() }}</span>
+</button>

@@ -1,0 +1,12 @@
+{
+  "latest": "2026-10-23",
+  "versions": [
+    {
+      "id": "2026-10-23",
+      "label": "Initial release",
+      "source": "LRRK2 Variant Activity Browser Data.xlsx",
+      "variants": 360,
+      "replicateSets": 61
+    }
+  ]
+}

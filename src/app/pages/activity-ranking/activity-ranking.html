@@ -1,0 +1,46 @@
+<section class="page">
+  <header class="page-header">
+    <h2>Kinase activity of all screened variants</h2>
+    <p class="caption">
+      Mean pRab10/Rab10 per variant ranked from highest to lowest. Red: ranked at or above p.G2019S;
+      grey: within / around WT range; blue: below 0.5-fold × WT. Drag to zoom, double-click to
+      reset.
+    </p>
+  </header>
+
+  <div class="toolbar"><app-screen-filter /></div>
+
+  @if (failed()) {
+    <p class="status">Could not load variant data.</p>
+  } @else if (loading()) {
+    <p class="status">Loading…</p>
+  } @else if (figure(); as fig) {
+    <div class="plot-frame">
+      <plotly-plot
+        [data]="fig.data"
+        [layout]="fig.layout"
+        [config]="config"
+        [useResizeHandler]="true"
+        [innerStyle]="{ position: 'relative', width: '100%', height: fig.layout.height + 'px' }"
+      />
+    </div>
+    <div class="insets">
+      <app-rank-inset
+        [title]="inset1.title"
+        [ranked]="ranked()"
+        [yMin]="inset1.yMin"
+        [yMax]="inset1.yMax"
+        [lines]="inset1Lines()"
+        filename="lrrk2-insert-1"
+      />
+      <app-rank-inset
+        [title]="inset2.title"
+        [ranked]="ranked()"
+        [yMin]="inset2.yMin"
+        [yMax]="inset2.yMax"
+        [lines]="inset2Lines()"
+        filename="lrrk2-insert-2"
+      />
+    </div>
+  }
+</section>

@@ -1,0 +1,76 @@
+:host {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  z-index: 1100;
+  transform: translateX(-50%);
+  animation: rise 160ms ease-out;
+}
+
+.chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 4px 0 12px;
+  font-size: 12px;
+  white-space: nowrap;
+  color: var(--mat-sys-on-surface);
+  background: var(--mat-sys-surface-container-highest);
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 16px;
+  box-shadow: var(--mat-sys-level2);
+}
+
+.swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+.label,
+.detail {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.detail {
+  font-variant-numeric: tabular-nums;
+}
+
+.name {
+  font-weight: 500;
+}
+
+.clear {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  color: var(--mat-sys-on-surface-variant);
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--mat-sys-surface-container-high);
+  }
+
+  .material-symbols-outlined {
+    font-size: 16px;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host {
+    animation: none;
+  }
+}

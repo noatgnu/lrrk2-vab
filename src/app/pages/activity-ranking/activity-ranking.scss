@@ -1,0 +1,21 @@
+:host {
+  display: block;
+}
+
+.plot-frame {
+  min-width: 960px;
+}
+
+.insets {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  min-width: 960px;
+  margin-top: 8px;
+}
+
+.toolbar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 8px;
+}

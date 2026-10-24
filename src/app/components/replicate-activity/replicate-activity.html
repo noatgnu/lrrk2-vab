@@ -1,0 +1,49 @@
+<section class="page">
+  <header class="page-header">
+    <h2>Replicate activity of activating variants</h2>
+    <p class="caption">
+      Bars show mean ± SD of replicates; dots are individual replicates coloured by domain. Dotted
+      line marks WT (1.0). Click legend entries to hide a group.
+    </p>
+  </header>
+
+  <div class="toolbar">
+    <mat-button-toggle-group
+      hideSingleSelectionIndicator
+      [value]="sortMode()"
+      (change)="sortMode.set($event.value)"
+      aria-label="Column order"
+    >
+      <mat-button-toggle value="sequence">Sequence order</mat-button-toggle>
+      <mat-button-toggle value="activity">Ranked by mean</mat-button-toggle>
+    </mat-button-toggle-group>
+
+    <mat-button-toggle-group
+      hideSingleSelectionIndicator
+      [value]="domain() ?? ''"
+      (change)="setDomain($event.value || undefined)"
+      aria-label="Highlight domain"
+    >
+      <mat-button-toggle value="">All</mat-button-toggle>
+      @for (name of domains(); track name) {
+        <mat-button-toggle [value]="name">{{ name }}</mat-button-toggle>
+      }
+    </mat-button-toggle-group>
+  </div>
+
+  @if (failed()) {
+    <p class="status">Could not load replicate data.</p>
+  } @else if (loading()) {
+    <p class="status">Loading…</p>
+  } @else if (figure(); as fig) {
+    <div class="plot-frame">
+      <plotly-plot
+        [data]="fig.data"
+        [layout]="fig.layout"
+        [config]="config"
+        [useResizeHandler]="true"
+        [innerStyle]="{ position: 'relative', width: '100%', height: fig.layout.height + 'px' }"
+      />
+    </div>
+  }
+</section>

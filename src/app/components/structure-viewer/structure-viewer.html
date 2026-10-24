@@ -1,0 +1,21 @@
+@if (failed()) {
+  <p class="status">Could not load the 3D viewer.</p>
+} @else if (scriptReady()) {
+  <pdbe-molstar
+    #viewer
+    custom-data-url="structures/AF-Q5S007-F1-model_v6.bcif"
+    custom-data-format="cif"
+    custom-data-binary="true"
+    visual-style="gaussian-surface"
+    hide-controls="true"
+    sequence-panel="false"
+    pdbe-link="false"
+    select-interaction="false"
+    loading-overlay="false"
+    hide-expand-icon="true"
+    hide-control-info-icon="true"
+    hide-animation-icon="true"
+  ></pdbe-molstar>
+} @else {
+  <p class="status">Loading 3D viewer…</p>
+}

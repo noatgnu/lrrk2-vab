@@ -1,0 +1,10 @@
+[tool.poetry]
+name = "lrrk2-vab-data"
+version = "0.1.0"
+description = "Converts the LRRK2 Variant Activity Browser workbook into JSON for the static site"
+authors = ["Toan Phung <toan.phungkhoiquoctoan@gmail.com>"]
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.10"
+openpyxl = "^3.1"

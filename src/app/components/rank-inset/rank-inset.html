@@ -1,0 +1,11 @@
+@if (figure(); as fig) {
+  <plotly-plot
+    [data]="fig.data"
+    [layout]="fig.layout"
+    [config]="config()"
+    [useResizeHandler]="true"
+    [innerStyle]="{ position: 'relative', width: '100%', height: fig.layout.height + 'px' }"
+  />
+} @else {
+  <p class="status">No variants in this range.</p>
+}

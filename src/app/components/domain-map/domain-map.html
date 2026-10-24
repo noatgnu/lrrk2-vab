@@ -1,0 +1,27 @@
+<section class="page">
+  <header class="page-header">
+    <h2>Activating variants across LRRK2 domains</h2>
+    <p class="caption">
+      Variants with replicate pRAB10/RAB10 measurements, grouped by domain.
+      <b><i>Bold italic</i>*</b> = MDSG pathogenic or likely pathogenic. Hover the ticks for
+      activity; click a box to focus that domain in the structure and replicate plot below.
+    </p>
+  </header>
+
+  @if (failed()) {
+    <p class="status">Could not load variant data.</p>
+  } @else if (loading()) {
+    <p class="status">Loading…</p>
+  } @else if (figure(); as fig) {
+    <div class="plot-frame">
+      <plotly-plot
+        [data]="fig.data"
+        [layout]="fig.layout"
+        [config]="config"
+        [useResizeHandler]="true"
+        [innerStyle]="{ position: 'relative', width: '100%', height: fig.layout.height + 'px' }"
+        (clickAnnotation)="onAnnotationClick($event)"
+      />
+    </div>
+  }
+</section>

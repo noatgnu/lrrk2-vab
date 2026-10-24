@@ -8,7 +8,11 @@
   "projects": {
     "lrrk2-vab": {
       "projectType": "application",
-      "schematics": {},
+      "schematics": {
+        "@schematics/angular:component": {
+          "style": "scss"
+        }
+      },
       "root": "",
       "sourceRoot": "src",
       "prefix": "app",
@@ -25,16 +29,38 @@
               }
             ],
             "styles": [
-              "src/styles.css"
-            ]
+              "src/material-theme.scss",
+              "src/styles.scss",
+              {
+                "input": "node_modules/pdbe-molstar/build/pdbe-molstar-light.css",
+                "inject": false,
+                "bundleName": "pdbe-molstar-light"
+              },
+              {
+                "input": "node_modules/pdbe-molstar/build/pdbe-molstar.css",
+                "inject": false,
+                "bundleName": "pdbe-molstar-dark"
+              }
+            ],
+            "allowedCommonJsDependencies": [
+              "plotly.js-dist-min"
+            ],
+            "scripts": [
+              {
+                "input": "node_modules/pdbe-molstar/build/pdbe-molstar-component.js",
+                "inject": false,
+                "bundleName": "pdbe-molstar"
+              }
+            ],
+            "inlineStyleLanguage": "scss"
           },
           "configurations": {
             "production": {
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "500kB",
-                  "maximumError": "1MB"
+                  "maximumWarning": "6MB",
+                  "maximumError": "8MB"
                 },
                 {
                   "type": "anyComponentStyle",
