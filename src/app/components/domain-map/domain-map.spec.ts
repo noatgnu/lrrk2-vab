@@ -101,16 +101,21 @@ describe('DomainMap', () => {
     expect(fixture.nativeElement.textContent).toContain('Could not load variant data.');
   });
 
-  it('draws one dot per variant and hides them with the Variant dots checkbox', async () => {
+  it('hides variant dots by default and draws one dot per variant when enabled', async () => {
     const plot = await load();
     const traces = () => plot.data() as { x: number[]; y: number[] }[];
+    const toggle = (): void => {
+      fixture.nativeElement.querySelector('.dots-toggle input').click();
+      fixture.detectChanges();
+    };
 
+    expect(traces().length).toBe(1);
+
+    toggle();
     expect(traces().length).toBe(2);
     expect(traces()[1].x).toEqual([230, 1441]);
 
-    fixture.nativeElement.querySelector('.dots-toggle input').click();
-    fixture.detectChanges();
-
+    toggle();
     expect(traces().length).toBe(1);
   });
 });
