@@ -137,7 +137,7 @@ export class DomainMap {
       hovertemplate:
         '<b>%{customdata[0]}</b> · %{customdata[1]}<br>' +
         'replicate mean %{customdata[2]} ± %{customdata[3]} (n=%{customdata[4]})<br>' +
-        'MDSG: %{customdata[5]}<br>%{customdata[6]}<extra></extra>',
+        'MDSGene: %{customdata[5]}<br>%{customdata[6]}<extra></extra>',
     };
   }
 
@@ -206,21 +206,20 @@ export class DomainMap {
     for (let r = 0; r < rows; r++) {
       const left = members[r];
       const right = columns === 2 ? members[r + rows] : undefined;
-      const padding = '&nbsp;'.repeat(width - left.variant.length + 1);
+      const padding = '&nbsp;'.repeat(width - left.variant.length + 2);
       lines.push(right ? `${names[r]}${padding}${names[r + rows]}` : names[r]);
     }
     return [header, ...lines].join('<br>');
   }
 
   /**
-   * Formats a variant name for a callout. MDSG pathogenic or likely pathogenic variants are bold italic
-   * in full-strength ink with a trailing asterisk; the others are in a subdued ink with a trailing space,
-   * so both occupy the same monospace width.
+   * Formats a variant name for a callout: bold italic in full-strength ink for MDSGene pathogenic or likely
+   * pathogenic variants, subdued ink for the others.
    */
   private variantLabel(variant: ReplicateVariant, palette: ChartPalette): string {
     return isPathogenic(variant)
-      ? `<b><i>${variant.variant}</i></b><b>*</b>`
-      : `<span style="color:${palette.subdued}">${variant.variant}</span>&nbsp;`;
+      ? `<b><i>${variant.variant}</i></b>`
+      : `<span style="color:${palette.subdued}">${variant.variant}</span>`;
   }
 
   private doublesBox(doubles: ReplicateVariant[], palette: ChartPalette): AnnotationSpec {
@@ -275,7 +274,7 @@ export class DomainMap {
 }
 
 /**
- * True when the variant is classified MDSG pathogenic or likely pathogenic.
+ * True when the variant is classified MDSGene pathogenic or likely pathogenic.
  */
 export function isPathogenic(variant: ReplicateVariant): boolean {
   return !!variant.classification && PATHOGENIC_CLASSES.has(variant.classification);

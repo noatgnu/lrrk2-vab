@@ -37,11 +37,12 @@ describe('VersionPicker', () => {
     flushIndex(http);
     fixture.detectChanges();
 
-    expect(options()).toEqual([
-      'Latest (2026-10-23)',
-      '2026-10-23 · Initial release',
-      '2025-01-01',
-    ]);
+    expect(options()).toEqual(['Latest (Initial release)', 'Initial release', '2025-01-01']);
+    expect(
+      Array.from(
+        fixture.nativeElement.querySelectorAll('option') as NodeListOf<HTMLOptionElement>,
+      ).map((o) => o.value),
+    ).toEqual(['latest', '2026-10-23', '2025-01-01']);
   });
 
   it('selects the option for the requested package', () => {

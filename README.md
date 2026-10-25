@@ -1,4 +1,32 @@
-# Lrrk2Vab
+# LRRK2 Variant Activity Browser
+
+Static Angular site with interactive Plotly views of LRRK2 variant activity data.
+
+## Data
+
+The workbook is converted into dated data packages under `public/data/<YYYY-MM-DD>/`, listed newest first in `public/data/index.json`:
+
+```bash
+poetry install
+poetry run python scripts/convert_xlsx.py --date 2026-10-23 --label "Initial release"
+```
+
+Each package contains:
+
+- `variants.json`: the Figure 2A screen (360 variants, pRAB10/RAB10 mean, SD, domain, MDSG classification, outcome) and domain boundaries.
+- `replicates.json`: the Figure 4 replicate measurements for controls and activating variants, with mean and SD.
+
+To publish an update, run the script with a new `--date` (default: today) and optionally `--workbook path/to/new.xlsx`. Older packages stay available; re-using a date replaces that package.
+
+Every view URL carries the package date, e.g. `#/2026-10-23/activity-ranking`. `#/latest/...` always follows the newest package, and unknown dates redirect to `latest`.
+
+## Structure view
+
+The Activating variants view includes a 3D structure explorer that renders the AlphaFold DB model [AF-Q5S007-F1](https://alphafold.ebi.ac.uk/entry/Q5S007) v6 (CC-BY 4.0), bundled as `public/structures/AF-Q5S007-F1-model_v6.bcif`, with the [PDBe Mol*](https://github.com/PDBeurope/pdbe-molstar) web component. The Mol* script and stylesheets are emitted as separate, non-injected bundles (`angular.json`) and only downloaded when that view is opened. The AlphaFold model is used because the experimental cryo-EM structures leave most of the ARM domain unresolved.
+
+## Publishing
+
+`.github/workflows/deploy-pages.yml` tests, builds and deploys the site to GitHub Pages on every push to `main` or `master` (or manually from the Actions tab). In the repository settings, set **Pages → Build and deployment → Source** to **GitHub Actions**. The site uses hash-based URLs and a relative base path, so it works from the `https://<user>.github.io/<repo>/` subpath without extra configuration.
 
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.2.4.
 

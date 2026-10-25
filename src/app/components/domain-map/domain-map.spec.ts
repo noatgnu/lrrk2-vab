@@ -55,9 +55,10 @@ describe('DomainMap', () => {
     const roc = annotations.find((a) => a.name === 'ROC');
 
     expect(annotations.filter((a) => a.name).length).toBe(SCREEN_FIXTURE.domains.length);
-    expect(roc?.text).toContain('<b><i>R1441G</i></b><b>*</b>');
+    expect(roc?.text).toContain('<b><i>R1441G</i></b>');
+    expect(roc?.text).not.toContain('*');
     expect(annotations.find((a) => a.name === 'ARM')?.text).toContain(
-      `<span style="color:${LIGHT_PALETTE.subdued}">H230R</span>&nbsp;`,
+      `<span style="color:${LIGHT_PALETTE.subdued}">H230R</span>`,
     );
   });
 

@@ -1,6 +1,7 @@
 import { Component, computed, ElementRef, inject, input, viewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { DomainFocusChip } from '../../components/domain-focus-chip/domain-focus-chip';
+import { Introduction } from '../../components/introduction/introduction';
 import { DomainMap } from '../../components/domain-map/domain-map';
 import { ReplicateActivity } from '../../components/replicate-activity/replicate-activity';
 import { StructureExplorer } from '../../components/structure-explorer/structure-explorer';
@@ -12,7 +13,7 @@ import { Lrrk2Data } from '../../services/lrrk2-data';
  * a floating chip shows the focused domain and clears it.
  */
 @Component({
-  imports: [DomainMap, StructureExplorer, ReplicateActivity, DomainFocusChip],
+  imports: [Introduction, DomainMap, StructureExplorer, ReplicateActivity, DomainFocusChip],
   selector: 'app-activating-variants',
   styleUrl: './activating-variants.scss',
   templateUrl: './activating-variants.html',

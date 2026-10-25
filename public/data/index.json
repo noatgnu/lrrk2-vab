@@ -3,7 +3,7 @@
   "versions": [
     {
       "id": "2026-10-23",
-      "label": "Initial release",
+      "label": "Published dataset – Cheung et al. (2026)",
       "source": "LRRK2 Variant Activity Browser Data.xlsx",
       "variants": 360,
       "replicateSets": 61

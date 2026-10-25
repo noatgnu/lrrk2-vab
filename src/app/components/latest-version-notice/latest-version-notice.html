@@ -1,0 +1,16 @@
+@if (outdated(); as current) {
+  <div class="notice" role="status" aria-live="polite">
+    <span class="material-symbols-outlined icon" aria-hidden="true">history</span>
+    <span class="text" [title]="current.id">
+      Viewing data from <strong>{{ name(current) }}</strong>
+    </span>
+    @if (latest(); as newest) {
+      <button type="button" class="latest" [title]="newest.id" (click)="viewLatest()">
+        View latest ({{ name(newest) }})
+      </button>
+    }
+    <button type="button" class="dismiss" aria-label="Dismiss" title="Dismiss" (click)="dismiss()">
+      <span class="material-symbols-outlined" aria-hidden="true">close</span>
+    </button>
+  </div>
+}

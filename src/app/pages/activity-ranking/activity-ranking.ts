@@ -114,7 +114,7 @@ export class ActivityRanking {
       hovertemplate:
         '<b>%{customdata[0]}</b> · %{customdata[1]}<br>' +
         'rank %{customdata[5]} · %{y:.2f} ± %{customdata[2]} (n=%{customdata[3]})<br>' +
-        'MDSG: %{customdata[4]}<extra></extra>',
+        'MDSGene: %{customdata[4]}<extra></extra>',
     };
   }
 

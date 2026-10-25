@@ -68,3 +68,10 @@ export interface DataIndex {
   latest: string;
   versions: DataVersion[];
 }
+
+/**
+ * The name a data package is shown under: its label, or its date when it has none.
+ */
+export function versionName(version: DataVersion): string {
+  return version.label ?? version.id;
+}

@@ -60,7 +60,12 @@ describe('ActivatingVariants', () => {
       e.tagName.toLowerCase(),
     );
 
-    expect(order).toEqual(['app-domain-map', 'app-structure-explorer', 'app-replicate-activity']);
+    expect(order).toEqual([
+      'app-introduction',
+      'app-domain-map',
+      'app-structure-explorer',
+      'app-replicate-activity',
+    ]);
     expect(map.selected()).toBe('KIN');
     expect(structure.domain()).toBe('KIN');
     expect(structure.set()).toBe('all');

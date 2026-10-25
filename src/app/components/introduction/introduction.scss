@@ -1,0 +1,28 @@
+:host {
+  display: block;
+}
+
+.introduction {
+  margin: 8px 0 12px;
+  padding: 12px 16px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--mat-sys-on-surface);
+  background: var(--mat-sys-surface-container-low);
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 4px;
+}
+
+h2 {
+  margin: 0 0 6px;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+p {
+  margin: 4px 0;
+}
+
+a {
+  color: var(--mat-sys-primary);
+}

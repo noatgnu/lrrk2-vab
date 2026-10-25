@@ -2,12 +2,16 @@
   <label class="picker" [title]="data.current()?.source ?? ''">
     <span>Data</span>
     <select (change)="choose($any($event.target).value)">
-      <option [value]="latest" [selected]="data.requested() === latest">
-        Latest ({{ index.latest }})
+      <option [value]="latest" [selected]="data.requested() === latest" [title]="index.latest">
+        Latest ({{ latestVersion() ? name(latestVersion()!) : index.latest }})
       </option>
       @for (version of index.versions; track version.id) {
-        <option [value]="version.id" [selected]="data.requested() === version.id">
-          {{ version.id }}{{ version.label ? ' · ' + version.label : '' }}
+        <option
+          [value]="version.id"
+          [selected]="data.requested() === version.id"
+          [title]="version.id"
+        >
+          {{ name(version) }}
         </option>
       }
     </select>
