@@ -40,7 +40,6 @@ const MONO = 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
 const LINE_PX = 14.4;
 const BOX_PAD = 4;
 const ASIDE_GAP = 4;
-const NAMED_BAR_MIN = 120;
 
 /**
  * Variants listed in grey parentheses above their domain's box instead of inside it, as in the
@@ -102,7 +101,7 @@ export class DomainMap {
       base: domains.map((d) => d.start),
       x: domains.map((d) => d.end - d.start),
       width: BAR_HALF_HEIGHT * 2,
-      text: domains.map((d) => (d.end - d.start > 120 ? d.name : '')),
+      text: domains.map((d) => d.name),
       textposition: 'inside',
       insidetextanchor: 'middle',
       textfont: {
@@ -218,8 +217,8 @@ export class DomainMap {
   }
 
   /**
-   * Text placed just beyond a domain's box: the domain name when the bar is too narrow to show it,
-   * the set-aside variants in grey parentheses, and variants activating only in screen 3 marked `*`.
+   * Text placed just beyond a domain's box: the set-aside variants in grey parentheses and the
+   * variants activating only in screen 3 marked `*`.
    * Returns null when there is nothing to show.
    */
   private aside(
@@ -229,9 +228,6 @@ export class DomainMap {
     palette: ChartPalette,
   ): AnnotationSpec | null {
     const lines: string[] = [];
-    if (domain.end - domain.start <= NAMED_BAR_MIN) {
-      lines.push(`<b style="color:${palette.domainInk[domain.name]}">${domain.name}</b>`);
-    }
     const setAside = screenVariants
       .filter((v) => v.domain === domain.name && SET_ASIDE_VARIANTS.has(v.variant))
       .map((v) => v.variant);
