@@ -42,7 +42,6 @@
     <button type="button" class="reset" (click)="resetView()">Reset view</button>
 
     @if (variantSet() === 'all') {
-      <app-screen-filter />
       <span class="legend">
         @for (group of groups; track group) {
           <span class="key"

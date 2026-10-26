@@ -10,12 +10,10 @@ import {
 } from '@angular/core';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { Router } from '@angular/router';
-import { ScreenFilterToggle } from '../screen-filter/screen-filter';
 import { StructureViewer } from '../../components/structure-viewer/structure-viewer';
 import { ActivityGroup, rankVariants } from '../../models/activity';
 import { MarkedResidue, STRUCTURE_MODEL } from '../../models/structure';
 import { Lrrk2Data } from '../../services/lrrk2-data';
-import { ScreenFilter } from '../../services/screen-filter';
 import { Theme } from '../../services/theme';
 
 export type VariantSet = 'activating' | 'all';
@@ -65,7 +63,7 @@ const GROUP_LABELS: Record<ActivityGroup, string> = {
  * changes are written back to it.
  */
 @Component({
-  imports: [StructureViewer, MatButtonToggleModule, ScreenFilterToggle],
+  imports: [StructureViewer, MatButtonToggleModule],
   selector: 'app-structure-explorer',
   styleUrl: './structure-explorer.scss',
   templateUrl: './structure-explorer.html',
@@ -74,7 +72,6 @@ export class StructureExplorer {
   private readonly data = inject(Lrrk2Data);
   private readonly router = inject(Router);
   private readonly theme = inject(Theme);
-  private readonly screens = inject(ScreenFilter);
   private readonly rows = viewChildren<ElementRef<HTMLElement>>('row');
 
   readonly set = input<string | undefined>();
@@ -134,7 +131,7 @@ export class StructureExplorer {
       return v && v.mean !== null ? { mean: v.mean, sd: v.sd, n: v.replicates.length } : null;
     };
     if (this.variantSet() === 'all') {
-      return rankVariants(this.screens.apply(screenVariants)).map((r) => ({
+      return rankVariants(screenVariants).map((r) => ({
         name: r.variant.variant,
         residues: r.variant.residues,
         domains: domainsOf(r.variant.domain, r.variant.residues),

@@ -177,11 +177,11 @@ describe('StructureExplorer', () => {
     expect(listed()).toEqual(['R1441G', 'S455P-R1441H']);
   });
 
-  it('applies the screen filter to the all-screened set', async () => {
+  it('lists variants from every screen in the all-screened set', async () => {
     await load({ set: 'all' }, SCREEN_3_FIXTURE);
 
-    expect(listed()).not.toContain('R1514G');
-    expect(fixture.nativeElement.querySelector('app-screen-filter')).toBeTruthy();
+    expect(listed()).toContain('R1514G');
+    expect(fixture.nativeElement.querySelector('app-screen-filter')).toBeNull();
   });
 
   it('labels the table columns and shows screen and replicate activity side by side', async () => {

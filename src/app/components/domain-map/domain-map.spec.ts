@@ -4,12 +4,12 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { PlotlyComponent } from 'angular-plotly.js';
-import { REPLICATE_FIXTURE, SCREEN_FIXTURE } from '../../testing/fixtures';
+import { REPLICATE_FIXTURE, SCREEN_FIXTURE, screenVariant } from '../../testing/fixtures';
 import { flushIndex, REPLICATES_URL, SCREEN_URL } from '../../testing/data-requests';
 import { PlotlyStub } from '../../testing/plotly-stub';
 import { LIGHT_PALETTE } from '../../models/chart-theme';
 import { Theme } from '../../services/theme';
-import { DomainMap, stackLevels } from './domain-map';
+import { boxMembers, calloutRows, DomainMap, screen3Only, stackLevels } from './domain-map';
 
 describe('DomainMap', () => {
   let component: DomainMap;
@@ -118,6 +118,40 @@ describe('DomainMap', () => {
 
     toggle();
     expect(traces().length).toBe(1);
+  });
+});
+
+describe('domain map boxes', () => {
+  const armReplicate = (variant: string) => ({ ...REPLICATE_FIXTURE.variants[0], variant });
+
+  it('leaves set-aside variants out of the box', () => {
+    const members = boxMembers([armReplicate('H230R'), armReplicate('R506P')], 'ARM');
+
+    expect(members.map((v) => v.variant)).toEqual(['H230R']);
+  });
+
+  it('finds variants whose only assessment was activating in screen 3', () => {
+    const screen3 = {
+      ...screenVariant('R1514G', 1.63, 'COR-A', [3]),
+      outcome: { label: 'Activating (screen 3)', category: 'activating' as const, screens: [3] },
+    };
+    const notActivating = screenVariant('X1600Y', 0.9, 'COR-A', [3]);
+    const twoScreens = {
+      ...screenVariant('Y1699C', 5.5, 'COR-A', [1, 2]),
+      outcome: {
+        label: 'Activating (screen 1 & 2)',
+        category: 'activating' as const,
+        screens: [1, 2],
+      },
+    };
+
+    expect(
+      screen3Only([screen3, notActivating, twoScreens], 'COR-A').map((v) => v.variant),
+    ).toEqual(['R1514G']);
+  });
+
+  it('uses two columns above eight variants', () => {
+    expect([1, 8, 9, 19].map(calloutRows)).toEqual([1, 8, 5, 10]);
   });
 });
 

@@ -3,12 +3,20 @@
     <h2>Kinase activity of all screened variants</h2>
     <p class="caption">
       Mean pRab10/Rab10 per variant ranked from highest to lowest. Red: ranked at or above p.G2019S;
-      grey: within / around WT range; blue: below 0.5-fold × WT. Drag to zoom, double-click to
-      reset.
+      grey: within / around WT range; blue: below 0.5-fold × WT. Corresponds to Figure 2 (A-C) in
+      <a
+        href="https://www.medrxiv.org/content/10.64898/2026.06.17.26355034v1"
+        target="_blank"
+        rel="noopener"
+        >Cheung et al.</a
+      >
     </p>
+    <p class="caption">Drag to zoom, double-click to reset.</p>
   </header>
 
-  <div class="toolbar"><app-screen-filter /></div>
+  <div class="toolbar">
+    <app-variant-search [(query)]="query" [matches]="matches().length" />
+  </div>
 
   @if (failed()) {
     <p class="status">Could not load variant data.</p>

@@ -1,0 +1,15 @@
+<label class="search">
+  <span class="material-symbols-outlined" aria-hidden="true">search</span>
+  <input
+    type="search"
+    placeholder="Highlight variant or residue, e.g. G2019S or 1441"
+    aria-label="Highlight variant or residue"
+    [value]="query()"
+    (input)="query.set($any($event.target).value)"
+  />
+</label>
+@if (query().trim()) {
+  <span class="matches" role="status">
+    {{ matches() }} match{{ matches() === 1 ? '' : 'es' }}
+  </span>
+}

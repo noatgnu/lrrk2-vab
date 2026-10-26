@@ -1,0 +1,39 @@
+:host {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.search {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 28px;
+  padding: 0 8px;
+  color: var(--mat-sys-on-surface-variant);
+  background: var(--mat-sys-surface);
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 4px;
+
+  &:focus-within {
+    border-color: var(--mat-sys-primary);
+  }
+
+  .material-symbols-outlined {
+    font-size: 16px;
+  }
+
+  input {
+    width: 300px;
+    font: inherit;
+    color: var(--mat-sys-on-surface);
+    background: transparent;
+    border: none;
+    outline: none;
+  }
+}
+
+.matches {
+  color: var(--mat-sys-on-surface-variant);
+}

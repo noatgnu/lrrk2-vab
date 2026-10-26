@@ -4,7 +4,7 @@ import type { ClickAnnotationEvent, Data, Layout } from 'plotly.js-dist-min';
 import { baseLayout, ChartPalette, Figure } from '../../models/chart-theme';
 import { ChartExport } from '../../services/chart-export';
 import { PATHOGENIC_CLASSES, tint } from '../../models/domain-style';
-import { Domain, ReplicateVariant } from '../../models/lrrk2';
+import { Domain, ReplicateVariant, ScreenVariant } from '../../models/lrrk2';
 import { Lrrk2Data } from '../../services/lrrk2-data';
 import { Theme } from '../../services/theme';
 
@@ -37,6 +37,16 @@ const DOT_STEP = 0.03;
 const DOT_GAP_RESIDUES = 16;
 const LIGHT_DOMAINS = new Set(['LRR', 'COR-A', 'COR-B', 'KIN']);
 const MONO = 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
+const LINE_PX = 14.4;
+const BOX_PAD = 4;
+const ASIDE_GAP = 4;
+const NAMED_BAR_MIN = 120;
+
+/**
+ * Variants listed in grey parentheses above their domain's box instead of inside it, as in the
+ * published domain figure.
+ */
+export const SET_ASIDE_VARIANTS: ReadonlySet<string> = new Set(['R506P', 'I610T', 'R981K']);
 const ON_LIGHT_FILL = '#0b0b0b';
 const ON_DARK_FILL = '#ffffff';
 
@@ -163,7 +173,7 @@ export class DomainMap {
     variants: ReplicateVariant[],
     palette: ChartPalette,
   ): AnnotationSpec {
-    const members = variants.filter((v) => v.domain === domain.name);
+    const members = boxMembers(variants, domain.name);
     const placement = CALLOUTS[domain.name];
     const above = placement.side === 'above';
     const color = palette.domain[domain.name];
@@ -176,7 +186,7 @@ export class DomainMap {
       ay: above ? -placement.offset : placement.offset,
       xanchor: 'center',
       yanchor: above ? 'bottom' : 'top',
-      text: this.calloutText(domain.name, members, palette),
+      text: this.calloutText(members, palette),
       align: 'left',
       font: { family: MONO, size: 11, color: palette.ink },
       showarrow: true,
@@ -192,15 +202,10 @@ export class DomainMap {
     };
   }
 
-  private calloutText(
-    domainName: string,
-    members: ReplicateVariant[],
-    palette: ChartPalette,
-  ): string {
-    const header = `<b style="color:${palette.domainInk[domainName]}">${domainName}</b>`;
+  private calloutText(members: ReplicateVariant[], palette: ChartPalette): string {
     const names = members.map((v) => this.variantLabel(v, palette));
     const columns = members.length > 8 ? 2 : 1;
-    const rows = Math.ceil(names.length / columns);
+    const rows = calloutRows(members.length);
     const width = Math.max(...members.map((v) => v.variant.length));
     const lines: string[] = [];
     for (let r = 0; r < rows; r++) {
@@ -209,7 +214,57 @@ export class DomainMap {
       const padding = '&nbsp;'.repeat(width - left.variant.length + 2);
       lines.push(right ? `${names[r]}${padding}${names[r + rows]}` : names[r]);
     }
-    return [header, ...lines].join('<br>');
+    return lines.join('<br>');
+  }
+
+  /**
+   * Text placed just beyond a domain's box: the domain name when the bar is too narrow to show it,
+   * the set-aside variants in grey parentheses, and variants activating only in screen 3 marked `*`.
+   * Returns null when there is nothing to show.
+   */
+  private aside(
+    domain: Domain,
+    replicateVariants: ReplicateVariant[],
+    screenVariants: ScreenVariant[],
+    palette: ChartPalette,
+  ): AnnotationSpec | null {
+    const lines: string[] = [];
+    if (domain.end - domain.start <= NAMED_BAR_MIN) {
+      lines.push(`<b style="color:${palette.domainInk[domain.name]}">${domain.name}</b>`);
+    }
+    const setAside = screenVariants
+      .filter((v) => v.domain === domain.name && SET_ASIDE_VARIANTS.has(v.variant))
+      .map((v) => v.variant);
+    if (setAside.length) {
+      lines.push(`<i style="color:${palette.muted}">(${setAside.join(', ')})</i>`);
+    }
+    const replicated = new Set(replicateVariants.map((v) => v.variant));
+    lines.push(
+      ...screen3Only(screenVariants, domain.name)
+        .filter((v) => !replicated.has(v.variant))
+        .map((v) => `${v.variant}*`),
+    );
+    if (!lines.length) {
+      return null;
+    }
+    const placement = CALLOUTS[domain.name];
+    const above = placement.side === 'above';
+    const rows = calloutRows(boxMembers(replicateVariants, domain.name).length);
+    const distance = placement.offset + rows * LINE_PX + 2 * BOX_PAD + 3 + ASIDE_GAP;
+    return {
+      x: (domain.start + domain.end) / 2,
+      y: above ? BAR_HALF_HEIGHT : -BAR_HALF_HEIGHT,
+      axref: 'x',
+      ax: placement.x,
+      ay: above ? -distance : distance,
+      xanchor: 'center',
+      yanchor: above ? 'bottom' : 'top',
+      text: lines.join('<br>'),
+      align: 'center',
+      font: { family: MONO, size: 11, color: palette.ink },
+      showarrow: true,
+      arrowcolor: 'rgba(0,0,0,0)',
+    };
   }
 
   /**
@@ -266,6 +321,9 @@ export class DomainMap {
       annotations: [
         ...this.boundaryLabels(screen.domains, screen.length, palette),
         ...screen.domains.map((d) => this.callout(d, singles, palette)),
+        ...screen.domains
+          .map((d) => this.aside(d, replicates.variants, screen.variants, palette))
+          .filter((a): a is AnnotationSpec => a !== null),
         this.doublesBox(doubles, palette),
       ],
     };
@@ -294,4 +352,31 @@ export function stackLevels(positions: number[], gap: number): number[] {
     lastAtLevel[level] = position;
     return level;
   });
+}
+
+/**
+ * The replicate variants listed inside a domain's box: those in the domain, minus the set-aside ones.
+ */
+export function boxMembers(variants: ReplicateVariant[], domain: string): ReplicateVariant[] {
+  return variants.filter((v) => v.domain === domain && !SET_ASIDE_VARIANTS.has(v.variant));
+}
+
+/**
+ * Screen variants in a domain whose only assessment was activating in screen 3.
+ */
+export function screen3Only(variants: ScreenVariant[], domain: string): ScreenVariant[] {
+  return variants.filter(
+    (v) =>
+      v.domain === domain &&
+      v.outcome.category === 'activating' &&
+      v.outcome.screens.length === 1 &&
+      v.outcome.screens[0] === 3,
+  );
+}
+
+/**
+ * Number of text rows in a callout box holding `count` variants (two columns above eight).
+ */
+export function calloutRows(count: number): number {
+  return Math.ceil(count / (count > 8 ? 2 : 1));
 }

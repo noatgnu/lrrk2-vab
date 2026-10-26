@@ -1,8 +1,8 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { PlotlyComponent } from 'angular-plotly.js';
 import type { Data, Layout } from 'plotly.js-dist-min';
 import { InsetLine, RankInset } from '../../components/rank-inset/rank-inset';
-import { ScreenFilterToggle } from '../../components/screen-filter/screen-filter';
+import { VariantSearch } from '../../components/variant-search/variant-search';
 import {
   ACTIVATING_THRESHOLD,
   ActivityGroup,
@@ -13,9 +13,9 @@ import {
   WT_LEVEL,
 } from '../../models/activity';
 import { baseLayout, ChartPalette, Figure } from '../../models/chart-theme';
+import { matchesQuery } from '../../models/variant-search';
 import { ChartExport } from '../../services/chart-export';
 import { Lrrk2Data } from '../../services/lrrk2-data';
-import { ScreenFilter } from '../../services/screen-filter';
 import { Theme } from '../../services/theme';
 
 type AnnotationSpec = NonNullable<Layout['annotations']>[number];
@@ -33,6 +33,9 @@ interface InsetWindow {
 const INSET_1: InsetWindow = { title: 'Insert 1', yMin: 1.4, yMax: 1.56 };
 const INSET_2: InsetWindow = { title: 'Insert 2', yMin: 0.42, yMax: 0.56 };
 const LABELLED = 18;
+const MAX_HIGHLIGHT_LABELS = 12;
+const HIGHLIGHT_COLUMN_GAP = 30;
+const HIGHLIGHT_STEP = 0.36;
 const FIRST_COLUMN = 6;
 const GROUP_NAMES: Record<ActivityGroup, string> = {
   above_reference: `≥ p.${REFERENCE_VARIANT}`,
@@ -45,7 +48,7 @@ const GROUP_NAMES: Record<ActivityGroup, string> = {
  * 0.5-fold thresholds.
  */
 @Component({
-  imports: [PlotlyComponent, RankInset, ScreenFilterToggle],
+  imports: [PlotlyComponent, RankInset, VariantSearch],
   selector: 'app-activity-ranking',
   styleUrl: './activity-ranking.scss',
   templateUrl: './activity-ranking.html',
@@ -54,18 +57,22 @@ export class ActivityRanking {
   private readonly data = inject(Lrrk2Data);
   private readonly theme = inject(Theme);
   private readonly chartExport = inject(ChartExport);
-  private readonly screens = inject(ScreenFilter);
 
   protected readonly loading = this.data.screen.isLoading;
   protected readonly failed = this.data.screen.error;
   protected readonly inset1 = INSET_1;
   protected readonly inset2 = INSET_2;
 
+  protected readonly query = signal('');
+
   protected readonly ranked = computed(() =>
-    this.data.screen.hasValue()
-      ? rankVariants(this.screens.apply(this.data.screen.value().variants))
-      : [],
+    this.data.screen.hasValue() ? rankVariants(this.data.screen.value().variants) : [],
   );
+
+  protected readonly matches = computed(() => {
+    const query = this.query();
+    return this.ranked().filter((r) => matchesQuery(r.variant, query));
+  });
 
   protected readonly reference = computed(() =>
     this.ranked().find((r) => r.variant.variant === REFERENCE_VARIANT),
@@ -92,10 +99,15 @@ export class ActivityRanking {
 
   private groupTrace(ranked: RankedVariant[], group: ActivityGroup, palette: ChartPalette): Data {
     const members = ranked.filter((r) => r.group === group);
+    const query = this.query();
+    const highlighted = members.flatMap((r, i) => (matchesQuery(r.variant, query) ? [i] : []));
     return {
       type: 'scatter',
       mode: 'markers',
       name: `${GROUP_NAMES[group]} (${members.length})`,
+      selectedpoints: query.trim() ? highlighted : null,
+      selected: { marker: { size: 11 } },
+      unselected: { marker: { opacity: 0.15 } },
       x: members.map((r) => r.rank),
       y: members.map((r) => r.mean),
       marker: {
@@ -108,7 +120,7 @@ export class ActivityRanking {
         r.variant.domain ?? '–',
         r.variant.sd?.toFixed(2) ?? '–',
         r.variant.n ?? '–',
-        r.variant.classification ?? 'not classified',
+        r.variant.classification ?? 'N/A',
         r.rank,
       ]),
       hovertemplate:
@@ -116,6 +128,49 @@ export class ActivityRanking {
         'rank %{customdata[5]} · %{y:.2f} ± %{customdata[2]} (n=%{customdata[3]})<br>' +
         'MDSGene: %{customdata[4]}<extra></extra>',
     };
+  }
+
+  /**
+   * Labels for the variants matching the highlight query, up to `MAX_HIGHLIGHT_LABELS`, in one column
+   * beside the matches with leader lines, so neighbouring matches stay readable. The column sits to the
+   * left of matches in the last quarter of the ranking. The fixed top-variant labels are hidden while searching.
+   */
+  private highlightLabels(palette: ChartPalette): AnnotationSpec[] {
+    const shown = this.matches().slice(0, MAX_HIGHLIGHT_LABELS);
+    if (!shown.length) {
+      return [];
+    }
+    const total = this.ranked().length;
+    const yMax = Math.ceil(Math.max(...this.ranked().map((r) => r.mean)) + 0.5);
+    const lastRank = Math.max(...shown.map((r) => r.rank));
+    const left = lastRank > total * 0.75;
+    const column = left
+      ? Math.min(...shown.map((r) => r.rank)) - HIGHLIGHT_COLUMN_GAP
+      : lastRank + HIGHLIGHT_COLUMN_GAP;
+    const centre = shown.reduce((sum, r) => sum + r.mean, 0) / shown.length;
+    const top = Math.min(
+      yMax - HIGHLIGHT_STEP / 2,
+      centre + ((shown.length - 1) * HIGHLIGHT_STEP) / 2,
+    );
+    return shown.map((r, i) => ({
+      x: r.rank,
+      y: r.mean,
+      axref: 'x',
+      ayref: 'y',
+      ax: column,
+      ay: top - i * HIGHLIGHT_STEP,
+      xanchor: left ? 'right' : 'left',
+      text: `<b>${r.variant.variant}</b> ${r.mean.toFixed(2)}`,
+      showarrow: true,
+      arrowhead: 0,
+      arrowwidth: 1,
+      arrowcolor: palette.ink,
+      standoff: 4,
+      font: { size: 11, color: palette.ink },
+      bgcolor: palette.hoverBg,
+      bordercolor: palette.axis,
+      borderpad: 2,
+    }));
   }
 
   private thresholdLines(palette: ChartPalette): ShapeSpec[] {
@@ -296,9 +351,10 @@ export class ActivityRanking {
       shapes: [...this.thresholdLines(palette), ...this.insetBoxes(ranked, palette)],
       annotations: [
         ...this.thresholdLabels(palette),
-        ...this.variantLabels(ranked, palette),
+        ...(this.query().trim() ? [] : this.variantLabels(ranked, palette)),
         ...this.groupLabels(ranked, maxMean, palette),
         ...this.insetLabels(ranked, palette),
+        ...this.highlightLabels(palette),
       ],
     };
     return { data, layout };

@@ -56,6 +56,23 @@ describe('DomainDistribution', () => {
     expect(violins.every((v) => v.type === 'violin')).toBe(true);
     expect(violins.every((v) => v.spanmode === 'soft')).toBe(true);
     expect(violins[0].text).toEqual(['A312V', 'H115P']);
-    expect(violins.flatMap((v) => v.text)).not.toContain('R1514G');
+  });
+
+  it('highlights the dots matching the search in place', async () => {
+    flushIndex(http);
+    http.expectOne(SCREEN_URL).flush(SCREEN_3_FIXTURE);
+    http.expectOne(REPLICATES_URL);
+    await Promise.resolve();
+    fixture.detectChanges();
+    const plot: PlotlyStub = fixture.debugElement.query(By.directive(PlotlyStub)).componentInstance;
+    const input: HTMLInputElement = fixture.nativeElement.querySelector('app-variant-search input');
+
+    input.value = 'h115p';
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    expect(
+      (plot.data() as { selectedpoints: number[] | null }[]).map((v) => v.selectedpoints),
+    ).toEqual([[1], []]);
   });
 });

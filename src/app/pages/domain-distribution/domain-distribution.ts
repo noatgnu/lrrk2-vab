@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { PlotlyComponent } from 'angular-plotly.js';
 import type { Data, Layout } from 'plotly.js-dist-min';
 import { ACTIVATING_THRESHOLD, REDUCED_THRESHOLD, WT_LEVEL } from '../../models/activity';
@@ -7,8 +7,8 @@ import { ChartExport } from '../../services/chart-export';
 import { tint } from '../../models/domain-style';
 import { Domain, ScreenVariant } from '../../models/lrrk2';
 import { Lrrk2Data } from '../../services/lrrk2-data';
-import { ScreenFilter } from '../../services/screen-filter';
-import { ScreenFilterToggle } from '../../components/screen-filter/screen-filter';
+import { VariantSearch } from '../../components/variant-search/variant-search';
+import { matchesQuery } from '../../models/variant-search';
 import { Theme } from '../../services/theme';
 
 type ShapeSpec = NonNullable<Layout['shapes']>[number];
@@ -17,7 +17,7 @@ type ShapeSpec = NonNullable<Layout['shapes']>[number];
  * Distribution of variant activity per LRRK2 domain as violins with every variant overlaid.
  */
 @Component({
-  imports: [PlotlyComponent, ScreenFilterToggle],
+  imports: [PlotlyComponent, VariantSearch],
   selector: 'app-domain-distribution',
   styleUrl: './domain-distribution.scss',
   templateUrl: './domain-distribution.html',
@@ -26,7 +26,17 @@ export class DomainDistribution {
   private readonly data = inject(Lrrk2Data);
   private readonly theme = inject(Theme);
   private readonly chartExport = inject(ChartExport);
-  private readonly screens = inject(ScreenFilter);
+
+  protected readonly query = signal('');
+
+  protected readonly matches = computed(() => {
+    const query = this.query();
+    return this.data.screen.hasValue()
+      ? this.data.screen
+          .value()
+          .variants.filter((v) => v.domain && v.mean !== null && matchesQuery(v, query))
+      : [];
+  });
 
   protected readonly loading = this.data.screen.isLoading;
   protected readonly failed = this.data.screen.error;
@@ -40,7 +50,12 @@ export class DomainDistribution {
   private violin(domain: Domain, variants: ScreenVariant[], palette: ChartPalette): Data {
     const members = variants.filter((v) => v.domain === domain.name && v.mean !== null);
     const color = palette.domain[domain.name];
+    const query = this.query();
+    const highlighted = members.flatMap((v, i) => (matchesQuery(v, query) ? [i] : []));
     return {
+      selectedpoints: query.trim() ? highlighted : null,
+      selected: { marker: { size: 12, color: palette.ink } },
+      unselected: { marker: { opacity: 0.15 } },
       type: 'violin',
       name: domain.name,
       x: members.map(() => domain.name),
@@ -90,8 +105,9 @@ export class DomainDistribution {
       return null;
     }
     const screen = this.data.screen.value();
-    const variants = this.screens.apply(screen.variants);
-    const data: Data[] = screen.domains.map((domain) => this.violin(domain, variants, palette));
+    const data: Data[] = screen.domains.map((domain) =>
+      this.violin(domain, screen.variants, palette),
+    );
     const layout: Partial<Layout> = {
       height: 520,
       margin: { l: 56, r: 16, t: 16, b: 40 },

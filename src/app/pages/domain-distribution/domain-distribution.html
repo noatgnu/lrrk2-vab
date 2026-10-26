@@ -2,11 +2,21 @@
   <header class="page-header">
     <h2>Variant activity by domain</h2>
     <p class="caption">
-      Each dot is one screened variant. Dotted lines mark 1.5, 1 and 0.5-fold × WT.
+      Each dot represents an individual LRRK2 variant. Dotted lines indicate kinase activity
+      relative to wild-type LRRK2 (0.5-, 1.0- and 1.5-fold), with ≥1.5-fold defining the operational
+      threshold for increased kinase activity. Corresponds to Figure 2D in
+      <a
+        href="https://www.medrxiv.org/content/10.64898/2026.06.17.26355034v1"
+        target="_blank"
+        rel="noopener"
+        >Cheung et al.</a
+      >
     </p>
   </header>
 
-  <div class="toolbar"><app-screen-filter /></div>
+  <div class="toolbar">
+    <app-variant-search [(query)]="query" [matches]="matches().length" />
+  </div>
 
   @if (failed()) {
     <p class="status">Could not load variant data.</p>

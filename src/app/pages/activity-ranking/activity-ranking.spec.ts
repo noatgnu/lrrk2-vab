@@ -2,7 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { provideRouter, Router } from '@angular/router';
+import { provideRouter } from '@angular/router';
 import { PlotlyComponent } from 'angular-plotly.js';
 import { RankInset } from '../../components/rank-inset/rank-inset';
 import { RANKING_FIXTURE, SCREEN_3_FIXTURE } from '../../testing/fixtures';
@@ -84,15 +84,29 @@ describe('ActivityRanking', () => {
     expect(fixture.debugElement.queryAll(By.directive(RankInset)).length).toBe(2);
   });
 
-  it('leaves screen-3 variants out by default and adds them when screen 3 is selected', async () => {
+  it('includes variants from every screen', async () => {
     const [main] = await load(SCREEN_3_FIXTURE);
-    const names = () => (main.data() as Trace[]).map((t) => t.name);
 
-    expect(names()[0]).toBe('≥ p.G2019S (3)');
+    expect((main.data() as Trace[])[0].name).toBe('≥ p.G2019S (4)');
+    expect(fixture.nativeElement.querySelector('app-screen-filter')).toBeNull();
+  });
 
-    await TestBed.inject(Router).navigateByUrl('/?screens=1,2,3');
+  it('highlights and labels variants matching the search', async () => {
+    const [main] = await load();
+    const input: HTMLInputElement = fixture.nativeElement.querySelector('app-variant-search input');
+
+    input.value = 'G2019S';
+    input.dispatchEvent(new Event('input'));
     fixture.detectChanges();
+    const traces = main.data() as (Trace & { selectedpoints: number[] | null })[];
+    const labels = (main.layout() as { annotations: { text: string }[] }).annotations.map(
+      (a) => a.text,
+    );
 
-    expect(names()[0]).toBe('≥ p.G2019S (4)');
+    expect(traces.map((t) => t.selectedpoints)).toEqual([[2], [], []]);
+    expect(labels).toContain('<b>G2019S</b> 1.44');
+    expect(
+      fixture.nativeElement.querySelector('app-variant-search .matches').textContent.trim(),
+    ).toBe('1 match');
   });
 });
