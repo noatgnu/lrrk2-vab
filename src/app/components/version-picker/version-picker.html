@@ -11,7 +11,7 @@
           [selected]="data.requested() === version.id"
           [title]="version.id"
         >
-          {{ name(version) }}
+          {{ name(version) }}{{ version.published ? ' · published' : '' }}
         </option>
       }
     </select>

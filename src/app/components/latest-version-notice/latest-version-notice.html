@@ -1,12 +1,15 @@
-@if (outdated(); as current) {
+@if (notice(); as n) {
   <div class="notice" role="status" aria-live="polite">
     <span class="material-symbols-outlined icon" aria-hidden="true">history</span>
-    <span class="text" [title]="current.id">
-      Viewing data from <strong>{{ name(current) }}</strong>
-    </span>
-    @if (latest(); as newest) {
-      <button type="button" class="latest" [title]="newest.id" (click)="viewLatest()">
-        View latest ({{ name(newest) }})
+    <div class="text" [title]="n.current.id">
+      <span class="headline">{{ n.headline }}</span>
+      @if (n.message) {
+        <span class="message">{{ n.message }}</span>
+      }
+    </div>
+    @if (n.action; as action) {
+      <button type="button" class="action" [title]="action.target.id" (click)="open(action)">
+        {{ action.label }}
       </button>
     }
     <button type="button" class="dismiss" aria-label="Dismiss" title="Dismiss" (click)="dismiss()">

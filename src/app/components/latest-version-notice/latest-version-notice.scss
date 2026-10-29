@@ -9,15 +9,14 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  max-width: calc(100vw - 32px);
-  height: 36px;
-  padding: 0 4px 0 10px;
+  max-width: min(720px, calc(100vw - 32px));
+  min-height: 36px;
+  padding: 4px 4px 4px 10px;
   font-size: 12px;
-  white-space: nowrap;
   color: var(--mat-sys-on-tertiary-container);
   background: var(--mat-sys-tertiary-container);
   border: 1px solid var(--mat-sys-outline-variant);
-  border-radius: 18px;
+  border-radius: 16px;
   box-shadow: var(--mat-sys-level2);
   animation: rise 160ms ease-out;
 }
@@ -27,11 +26,21 @@
 }
 
 .text {
-  overflow: hidden;
-  text-overflow: ellipsis;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 
-.latest {
+.headline {
+  font-weight: 500;
+}
+
+.message {
+  opacity: 0.85;
+}
+
+.action {
   height: 26px;
   padding: 0 12px;
   font: inherit;
@@ -40,6 +49,8 @@
   background: var(--mat-sys-primary);
   border: none;
   border-radius: 13px;
+  white-space: nowrap;
+  flex-shrink: 0;
   cursor: pointer;
 
   &:hover {

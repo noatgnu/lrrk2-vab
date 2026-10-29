@@ -98,4 +98,15 @@ describe('VersionPicker', () => {
     expect(options()).toContain('Test');
     expect(fixture.nativeElement.querySelector('select').value).toBe('2000-01-01');
   });
+
+  it('tags the published package in the menu', () => {
+    http.expectOne(INDEX_URL).flush({
+      ...INDEX_FIXTURE,
+      versions: [{ ...INDEX_FIXTURE.versions[0], published: true }, INDEX_FIXTURE.versions[1]],
+    });
+    TestBed.tick();
+    fixture.detectChanges();
+
+    expect(options()).toContain('Initial release · published');
+  });
 });

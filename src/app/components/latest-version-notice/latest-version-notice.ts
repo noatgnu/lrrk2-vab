@@ -1,11 +1,12 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { versionName } from '../../models/lrrk2';
+import { describeNotice, NoticeAction } from '../../models/dataset-notice';
 import { Lrrk2Data } from '../../services/lrrk2-data';
 import { VersionNavigator } from '../../services/version-navigator';
 
 /**
- * Floating notice shown while an older data package is displayed, with a button that opens the
- * newest package under its own dated URL. Dismissing it hides it until a different older package is opened.
+ * Floating notice about the data package on screen: points older packages to the latest one, the
+ * latest package to the published one, and shows a package's own message. Buttons open packages
+ * by their dated URL. Dismissing it hides it until a different package is opened.
  */
 @Component({
   selector: 'app-latest-version-notice',
@@ -16,29 +17,17 @@ export class LatestVersionNotice {
   private readonly data = inject(Lrrk2Data);
   private readonly navigator = inject(VersionNavigator);
   private readonly dismissedFor = signal<string | undefined>(undefined);
-  protected readonly name = versionName;
 
-  protected readonly latest = computed(() => {
-    const index = this.data.index();
-    return index?.versions.find((v) => v.id === index.latest);
-  });
-
-  protected readonly outdated = computed(() => {
-    const current = this.data.current();
-    const latest = this.latest();
-    return current && latest && current.id !== latest.id && this.dismissedFor() !== current.id
-      ? current
-      : undefined;
+  protected readonly notice = computed(() => {
+    const notice = describeNotice(this.data.index(), this.data.current());
+    return notice && notice.current.id !== this.dismissedFor() ? notice : null;
   });
 
   /**
-   * Opens the current view under the newest data package's dated URL.
+   * Opens the current view under the action's data package.
    */
-  protected viewLatest(): void {
-    const latest = this.latest();
-    if (latest) {
-      void this.navigator.goTo(latest.id);
-    }
+  protected open(action: NoticeAction): void {
+    void this.navigator.goTo(action.target.id);
   }
 
   /**

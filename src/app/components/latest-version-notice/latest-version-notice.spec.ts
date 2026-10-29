@@ -3,7 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Lrrk2Data } from '../../services/lrrk2-data';
 import { VersionNavigator } from '../../services/version-navigator';
-import { flushIndex } from '../../testing/data-requests';
+import { flushIndex, INDEX_FIXTURE, INDEX_URL } from '../../testing/data-requests';
 import { LatestVersionNotice } from './latest-version-notice';
 
 describe('LatestVersionNotice', () => {
@@ -44,15 +44,15 @@ describe('LatestVersionNotice', () => {
   it('names versions by label and links to the newest version by its date', () => {
     const element = show('2025-01-01');
 
-    expect(element.querySelector('.text')?.textContent?.trim()).toBe(
+    expect(element.querySelector('.headline')?.textContent?.trim()).toBe(
       'Viewing data from 2025-01-01',
     );
-    expect(element.querySelector('.latest')?.textContent?.trim()).toBe(
+    expect(element.querySelector('.action')?.textContent?.trim()).toBe(
       'View latest (Initial release)',
     );
-    expect(element.querySelector('.latest')?.getAttribute('title')).toBe('2026-10-23');
+    expect(element.querySelector('.action')?.getAttribute('title')).toBe('2026-10-23');
 
-    (element.querySelector('.latest') as HTMLButtonElement).click();
+    (element.querySelector('.action') as HTMLButtonElement).click();
 
     expect(goTo).toHaveBeenCalledWith('2026-10-23');
   });
@@ -64,5 +64,23 @@ describe('LatestVersionNotice', () => {
     fixture.detectChanges();
 
     expect(element.querySelector('.notice')).toBeNull();
+  });
+
+  it('shows the package’s own message under the headline', () => {
+    data.select('2025-01-01');
+    TestBed.inject(HttpTestingController)
+      .expectOne(INDEX_URL)
+      .flush({
+        ...INDEX_FIXTURE,
+        versions: [
+          INDEX_FIXTURE.versions[0],
+          { ...INDEX_FIXTURE.versions[1], notice: 'Superseded by the published dataset.' },
+        ],
+      });
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.message').textContent.trim()).toBe(
+      'Superseded by the published dataset.',
+    );
   });
 });

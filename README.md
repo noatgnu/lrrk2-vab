@@ -18,6 +18,8 @@ Each package contains:
 
 To publish an update, run the script with a new `--date` (default: today) and optionally `--workbook path/to/new.xlsx`. Older packages stay available; re-using a date replaces that package.
 
+Add `--hidden` to keep a package out of the data menu and out of `latest` while leaving it reachable by its dated URL. The `2000-01-01` "Test dataset" package is hidden this way so the "viewing an older dataset" notice can be tried at `#/2000-01-01/activating-variants`.
+
 Every view URL carries the package date, e.g. `#/2026-10-23/activity-ranking`. `#/latest/...` always follows the newest package, and unknown dates redirect to `latest`.
 
 ## Structure view

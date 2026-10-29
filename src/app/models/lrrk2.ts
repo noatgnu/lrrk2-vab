@@ -63,6 +63,8 @@ export interface DataVersion {
   variants: number;
   replicateSets: number;
   hidden?: boolean;
+  published?: boolean;
+  notice?: string | null;
 }
 
 export interface DataIndex {
