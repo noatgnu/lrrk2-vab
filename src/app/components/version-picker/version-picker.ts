@@ -5,7 +5,8 @@ import { VersionNavigator } from '../../services/version-navigator';
 
 /**
  * Data package selector that swaps the `:version` segment of the current URL, keeping the view and query.
- * Packages are listed by label; the date stays the option value and URL segment.
+ * Packages are listed by label; the date stays the option value and URL segment. Hidden packages are
+ * left out unless one is being viewed, so the menu always shows the package on screen.
  */
 @Component({
   selector: 'app-version-picker',
@@ -23,6 +24,11 @@ export class VersionPicker {
   });
 
   protected readonly name = versionName;
+
+  protected readonly listed = computed(() => {
+    const requested = this.data.requested();
+    return (this.data.index()?.versions ?? []).filter((v) => !v.hidden || v.id === requested);
+  });
 
   /**
    * Navigates to the same view under the chosen data package.

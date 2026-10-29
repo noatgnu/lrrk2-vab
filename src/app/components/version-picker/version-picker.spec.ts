@@ -3,7 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { Lrrk2Data } from '../../services/lrrk2-data';
-import { flushIndex, INDEX_URL } from '../../testing/data-requests';
+import { flushIndex, INDEX_FIXTURE, INDEX_URL } from '../../testing/data-requests';
 import { VersionPicker } from './version-picker';
 
 describe('VersionPicker', () => {
@@ -75,5 +75,27 @@ describe('VersionPicker', () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).toContain('Data index unavailable');
+  });
+
+  it('leaves hidden packages out of the menu unless one is being viewed', () => {
+    const data = TestBed.inject(Lrrk2Data);
+    const index = {
+      ...INDEX_FIXTURE,
+      versions: [
+        ...INDEX_FIXTURE.versions,
+        { ...INDEX_FIXTURE.versions[1], id: '2000-01-01', label: 'Test', hidden: true },
+      ],
+    };
+    http.expectOne(INDEX_URL).flush(index);
+    TestBed.tick();
+    fixture.detectChanges();
+
+    expect(options()).not.toContain('Test');
+
+    data.select('2000-01-01');
+    fixture.detectChanges();
+
+    expect(options()).toContain('Test');
+    expect(fixture.nativeElement.querySelector('select').value).toBe('2000-01-01');
   });
 });

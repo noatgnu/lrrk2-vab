@@ -5,7 +5,7 @@
       <option [value]="latest" [selected]="data.requested() === latest" [title]="index.latest">
         Latest ({{ latestVersion() ? name(latestVersion()!) : index.latest }})
       </option>
-      @for (version of index.versions; track version.id) {
+      @for (version of listed(); track version.id) {
         <option
           [value]="version.id"
           [selected]="data.requested() === version.id"
